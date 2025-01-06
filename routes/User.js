@@ -1,7 +1,7 @@
 import express from "express";
 import User from "../models/Users.js";
 import bcrypt from "bcryptjs";
-import { body, validationResult } from "express-validator";
+import { body, param, validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
 import mailTransporter from "../utils/mailTransporter.js";
 
@@ -48,9 +48,7 @@ router.post(
         const hashedPassword = await bcrypt.hash(password, salt);
         req.body.password = hashedPassword;
         User.create(req.body).then(async (user) => {
-          const verificationToken = jwt.sign({ userId: user.id }, JWT_SECRET, {
-            expiresIn: "1h"
-          });
+          const verificationToken = jwt.sign({ userId: user.id }, JWT_SECRET);
           const htmlMessage = `<h2>Dear ${user.firstName} ${user.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-user/${verificationToken}">Verify Now</a>`;
           mailTransporter.sendMail(
             {
@@ -73,6 +71,58 @@ router.post(
               }
             }
           );
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.errors
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Error Occurred on Server Side",
+        message: error.message
+      });
+    }
+  }
+);
+
+router.get(
+  "/verify-user/:verificationToken",
+  param("verificationToken").isJWT(),
+  async (req, res) => {
+    try {
+      const result = validationResult(req);
+      if (result.isEmpty()) {
+        const verificationToken = req.params.verificationToken;
+        jwt.verify(verificationToken, JWT_SECRET, async (err, decodedToken) => {
+          if (err) {
+            res.status(400).json({
+              success: false,
+              error: "Invalid request"
+            });
+          } else {
+            const user = await User.findById(decodedToken.userId);
+            if (user && !user.status) {
+              user.status = true;
+              await user.save();
+              res.status(200).json({
+                success: true,
+                msg: "User Verified Successfully"
+              });
+            } else if (user && user.status) {
+              res.status(400).json({
+                success: false,
+                msg: "User Already Verified"
+              });
+            } else {
+              res.status(400).json({
+                success: false,
+                error: "Invalid request"
+              });
+            }
+          }
         });
       } else {
         res.status(400).json({
