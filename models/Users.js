@@ -39,18 +39,24 @@ const userSchema = new Schema(
     },
     status: { type: Boolean, default: false },
     profileImage: {
-      type: String,
-      default: () => {
-        if (this.gender === "male") {
-          return "https://cdn-icons-png.flaticon.com/512/1999/1999625.png";
-        } else {
-          return "https://cdn-icons-png.flaticon.com/512/6997/6997662.png";
-        }
-      }
+      type: String
     }
   },
   { timestamps: true }
 );
+
+userSchema.pre("save", function (next) {
+  if (!this.profileImage) {
+    if (this.gender === "male") {
+      this.profileImage =
+        "https://cdn-icons-png.flaticon.com/512/1999/1999625.png";
+    } else if (this.gender === "female") {
+      this.profileImage =
+        "https://cdn-icons-png.flaticon.com/512/6997/6997662.png";
+    }
+  }
+  next();
+});
 
 const User = mongoose.model("user", userSchema);
 export default User;
