@@ -162,6 +162,79 @@ router.post(
   }
 );
 
+router.post(
+  "/login",
+  [
+    body("email", "Enter a valid email").isEmail(),
+    body(
+      "password",
+      "Password must contain at least 8 chars and must consist of min 2 uppercase, lowercase, numbers and symbols"
+    ).isStrongPassword({
+      minLength: 8,
+      minLowercase: 2,
+      minUppercase: 2,
+      minNumbers: 2,
+      minSymbols: 2
+    })
+  ],
+  async (req, res) => {
+    try {
+      const result = validationResult(req);
+      if (result.isEmpty()) {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email: email });
+        if (user) {
+          const passwordMatched = await bcrypt.compare(password, user.password);
+          if (passwordMatched) {
+            if (user.status === true) {
+              const authenticationToken = jwt.sign(
+                { userId: user.id },
+                JWT_SECRET
+              );
+              if (user.role == "admin") {
+                res.cookie("admin-auth-token", authenticationToken, {
+                  httpOnly: true
+                });
+              } else {
+                res.cookie("user-auth-token", authenticationToken, {
+                  httpOnly: true
+                });
+              }
+              res.status(200).json({
+                success: true,
+                msg: "Welcome back! Logged In Successfully"
+              });
+            } else {
+              res.status(401).json({
+                success: false,
+                error:
+                  "Your account is not verified. Verify it by visiting link we sent to your email to login again"
+              });
+            }
+          } else {
+            res.status(401).json({
+              success: false,
+              error: "Login credentials are invalid"
+            });
+          }
+        } else {
+          res
+            .status(404)
+            .json({ success: false, error: "Login credentials are invalid" });
+        }
+      } else {
+        res.status(400).json({ success: false, error: result.errors });
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Error Occurred on Server Side",
+        message: error.message
+      });
+    }
+  }
+);
+
 router.get(
   "/verify-user/:verificationToken",
   param("verificationToken").isJWT(),
