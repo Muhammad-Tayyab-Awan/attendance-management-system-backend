@@ -6,6 +6,7 @@ import connectToDatabase from "./utils/dbConnection.js";
 import startAbsenceCronJob from "./utils/absenceCron.js";
 import userRouter from "./routes/User.js";
 import attendanceRoute from "./routes/Attendance.js";
+import leaveRoute from "./routes/Leave.jss";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +17,7 @@ app.use(cookieParser());
 
 app.use("/api/user", userRouter);
 app.use("/api/attendance", attendanceRoute);
+app.use("/api/leave", leaveRoute);
 
 app.get("/", (req, res) => {
   res.send({
