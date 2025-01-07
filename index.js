@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import connectToDatabase from "./utils/dbConnection.js";
 import userRouter from "./routes/User.js";
+import attendanceRoute from "./routes/Attendance.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +14,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/api/user", userRouter);
+app.use("/api/attendance", attendanceRoute);
 
 app.get("/", (req, res) => {
   res.send({
