@@ -3,6 +3,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import connectToDatabase from "./utils/dbConnection.js";
+import startAbsenceCronJob from "./utils/absenceCron.js";
 import userRouter from "./routes/User.js";
 import attendanceRoute from "./routes/Attendance.js";
 
@@ -32,6 +33,7 @@ app.listen(PORT, () => {
   connectToDatabase()
     .then((res) => {
       console.log(res);
+      startAbsenceCronJob();
     })
     .catch(() => {
       console.log({ success: false, msg: "Connection Error Occurred" });
