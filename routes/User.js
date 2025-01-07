@@ -184,6 +184,22 @@ router
         message: error.message
       });
     }
+  })
+  .delete(verifyLogin, async (req, res) => {
+    try {
+      const userId = req.userId || req.adminId;
+      const user = await User.findByIdAndDelete(userId);
+      res.status(200).json({
+        success: true,
+        msg: `Dear ${user.username}! Your account is deleted successfully`
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Error Occurred on Server Side",
+        message: error.message
+      });
+    }
   });
 
 router.post(
