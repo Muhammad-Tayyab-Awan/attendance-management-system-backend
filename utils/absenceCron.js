@@ -3,7 +3,7 @@ import User from "../models/Users.js";
 import Attendance from "../models/Attendance.js";
 
 const absenceCronHour = process.env.ABSENCE_CRON_HOUR;
-const absenceCronMin = process.env.ABSENCE_CRON_Min;
+const absenceCronMin = process.env.ABSENCE_CRON_MIN;
 
 const startAbsenceCronJob = () => {
   try {
