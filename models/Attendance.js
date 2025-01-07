@@ -14,10 +14,6 @@ const attendanceSchema = new Schema({
     enum: ["present", "leave", "absent"],
     required: true
   },
-  remarks: {
-    type: String,
-    enum: ["onTime", "late"]
-  },
   markedDate: {
     type: Date,
     default: Date.now
