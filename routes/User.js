@@ -200,7 +200,88 @@ router
         message: error.message
       });
     }
-  });
+  })
+  .put(
+    verifyLogin,
+    [
+      body(
+        "username",
+        "Username must consist of 6 to 18 chars (lowercase and numbers only)"
+      )
+        .isString()
+        .matches(/^[a-z0-9]{6,18}$/)
+        .optional(),
+      body("email", "Enter a valid email").isEmail().optional(),
+      body("firstName")
+        .matches(/^[A-Z][a-z]{3,20}$/)
+        .optional(),
+      body("lastName")
+        .matches(/^[A-Z][a-z]{3,30}$/)
+        .optional(),
+      body("gender").isString().isIn(["male", "female"]).optional(),
+      body("address")
+        .isString()
+        .matches(/^[a-zA-Z0-9\s,.\-]{10,70}$/)
+        .optional()
+    ],
+    async (req, res) => {
+      try {
+        const result = validationResult(req);
+        if (result.isEmpty()) {
+          const userId = req.adminId || req.userId;
+          const user = await User.findById(userId);
+          const updatedData = req.body;
+          if (updatedData.email) {
+            updatedData.status =
+              updatedData.email === user.email ? true : false;
+          }
+          const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updatedData,
+            { new: true }
+          ).select(["-password", "-status", "-__v"]);
+          if (updatedData.email && updatedData.email !== user.email) {
+            const verificationToken = jwt.sign({ userId: user.id }, JWT_SECRET);
+            const htmlMessage = `<h2>Dear ${updatedUser.firstName} ${updatedUser.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-user/${verificationToken}">Verify Now</a>`;
+            mailTransporter.sendMail(
+              {
+                to: updatedData.email,
+                subject: "User Email Verification",
+                html: htmlMessage
+              },
+              (err) => {
+                if (err) {
+                  res.status(500).json({
+                    success: false,
+                    error: "Error Occurred on Server Side",
+                    message: err.message
+                  });
+                } else {
+                  res.status(200).json({
+                    success: true,
+                    msg: `Dear ${updatedUser.username}! Your account is updated successfully. We have sent an email to ${updatedUser.email}, please visit your mailbox to verify your account`
+                  });
+                }
+              }
+            );
+          } else {
+            res.status(200).json({
+              success: true,
+              msg: `Dear ${updatedUser.username}! Your account is updated successfully`
+            });
+          }
+        } else {
+          res.status(400).json({ success: false, error: result.errors });
+        }
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          error: "Error Occurred on Server Side",
+          message: error.message
+        });
+      }
+    }
+  );
 
 router.post(
   "/login",
