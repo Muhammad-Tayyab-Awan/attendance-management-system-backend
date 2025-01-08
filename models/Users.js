@@ -38,6 +38,7 @@ const userSchema = new Schema(
       required: true
     },
     status: { type: Boolean, default: false },
+    verified: { type: Boolean, default: false },
     profileImage: {
       type: String
     }
@@ -45,7 +46,7 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-userSchema.pre("save", function (next) {
+userSchema.pre("save", function(next) {
   if (!this.profileImage) {
     if (this.gender === "male") {
       this.profileImage =
