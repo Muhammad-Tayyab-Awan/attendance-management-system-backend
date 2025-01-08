@@ -53,19 +53,20 @@ router
                   .status(401)
                   .json({ success: false, error: "Invalid request" });
               } else {
-                const user = await User.findById(decodedToken.userId);
-                if (user && user.role === "admin") {
+                const user = await User.findById(decodedToken.adminId);
+                if (user && user.role === "admin" && user.verified === true) {
                   const { password } = req.body;
                   const salt = await bcrypt.genSalt(10);
                   const hashedPassword = await bcrypt.hash(password, salt);
                   req.body.password = hashedPassword;
+                  req.body.verified = true;
                   User.create(req.body)
                     .then(async (user) => {
                       const verificationToken = jwt.sign(
                         { userId: user.id },
                         JWT_SECRET
                       );
-                      const htmlMessage = `<h2>Dear ${user.firstName} ${user.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-user/${verificationToken}">Verify Now</a>`;
+                      const htmlMessage = `<h2>Dear ${user.firstName} ${user.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-email/${verificationToken}">Verify Now</a>`;
                       mailTransporter.sendMail(
                         {
                           to: user.email,
@@ -113,13 +114,15 @@ router
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
             req.body.password = hashedPassword;
+            req.body.verified = false;
             User.create(req.body)
               .then(async (user) => {
                 const verificationToken = jwt.sign(
                   { userId: user.id },
                   JWT_SECRET
                 );
-                const htmlMessage = `<h2>Dear ${user.firstName} ${user.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-user/${verificationToken}">Verify Now</a>`;
+                const htmlMessage = `<h2>Dear ${user.firstName} ${user.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-email/${verificationToken}">Verify Now</a>`;
+                const adminMessage = `<h2>Dear ${user.firstName} ${user.lastName}! A new user account has been created. Please verify the account by visiting the link below</h2><a href="${API_URI}/api/user/verify-user/${verificationToken}">Verify Now</a>`;
                 mailTransporter.sendMail(
                   {
                     to: user.email,
@@ -242,7 +245,7 @@ router
           ).select(["-password", "-status", "-__v"]);
           if (updatedData.email && updatedData.email !== user.email) {
             const verificationToken = jwt.sign({ userId: user.id }, JWT_SECRET);
-            const htmlMessage = `<h2>Dear ${updatedUser.firstName} ${updatedUser.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-user/${verificationToken}">Verify Now</a>`;
+            const htmlMessage = `<h2>Dear ${updatedUser.firstName} ${updatedUser.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-email/${verificationToken}">Verify Now</a>`;
             mailTransporter.sendMail(
               {
                 to: updatedData.email,
@@ -357,7 +360,7 @@ router.post(
 );
 
 router.get(
-  "/verify-user/:verificationToken",
+  "/verify-email/:verificationToken",
   param("verificationToken").isJWT(),
   async (req, res) => {
     try {
