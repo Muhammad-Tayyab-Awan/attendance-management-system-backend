@@ -17,12 +17,12 @@ const leaveSchema = new Schema(
     },
     reason: {
       type: String,
-      enum: ["Medical", "Personal", "Academic", "Other"],
+      enum: ["medical", "personal", "academic", "other"],
       required: true
     },
     status: {
       type: String,
-      enum: ["Pending", "Approved", "Rejected"],
+      enum: ["pending", "approved", "rejected"],
       default: "Pending"
     }
   },
