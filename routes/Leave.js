@@ -50,6 +50,19 @@ router.post(
             error: "Start Date should be less than End Date"
           });
         }
+        if (startDate.toString() === today.toString()) {
+          const presentAttendance = await Attendance.findOne({
+            userId: userId,
+            date: today
+          });
+          if (presentAttendance) {
+            return res.status(400).json({
+              success: false,
+              error:
+                "You can't submit leave on today's date as your attendance is marked"
+            });
+          }
+        }
         const presentLeave = await Leave.find({
           userId: userId,
           $or: [
