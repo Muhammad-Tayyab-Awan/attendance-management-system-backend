@@ -48,6 +48,21 @@ router.post(
             error: "Start Date should be less than End Date"
           });
         }
+        const presentLeave = await Leave.find({
+          userId: userId,
+          $or: [
+            { startDate: { $lte: startDate }, endDate: { $gte: startDate } },
+            { startDate: { $lte: endDate }, endDate: { $gte: endDate } },
+            { startDate: { $gte: startDate, $lte: endDate } },
+            { startDate: { $lte: startDate }, endDate: { $gte: endDate } }
+          ]
+        });
+        if (presentLeave.length > 0) {
+          return res.status(400).json({
+            success: false,
+            error: `You can't submit another leave as your leave is already ${presentLeave.status}`
+          });
+        }
         await Leave.create({
           userId,
           startDate,
