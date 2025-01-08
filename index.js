@@ -6,7 +6,7 @@ import connectToDatabase from "./utils/dbConnection.js";
 import startAbsenceCronJob from "./utils/absenceCron.js";
 import userRouter from "./routes/User.js";
 import attendanceRoute from "./routes/Attendance.js";
-import leaveRoute from "./routes/Leave.jss";
+import leaveRoute from "./routes/Leave.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
