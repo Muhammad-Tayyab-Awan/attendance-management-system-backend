@@ -6,6 +6,7 @@ import { body, query, validationResult } from "express-validator";
 import mailTransporter from "../utils/mailTransporter.js";
 import User from "../models/Users.js";
 import validateFilterQueries from "../utils/validateFilterQueries.js";
+import Attendance from "../models/Attendance.js";
 
 const router = express.Router();
 
@@ -61,7 +62,7 @@ router.post(
         if (presentLeave.length > 0) {
           return res.status(400).json({
             success: false,
-            error: `You can't submit another leave as your leave is already ${presentLeave.status}`
+            error: `You can't submit another leave as your already have submitted leave for that dates`
           });
         }
         const leave = await Leave.create({
@@ -303,6 +304,90 @@ router.put(
             success: false,
             error: "Leave reason updated successfully"
           });
+        } else {
+          res.status(400).json({ success: false, error: "Invalid leaveId" });
+        }
+      } else {
+        res.status(400).json({ success: false, error: result.errors });
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Error Occurred on Server Side",
+        message: error.message
+      });
+    }
+  }
+);
+
+router.get(
+  "/review",
+  verifyAdminLogin,
+  [
+    query("leaveId").isMongoId(),
+    query("mark").isString().isIn(["rejected", "approved"])
+  ],
+  async (req, res) => {
+    try {
+      const result = validationResult(req);
+      if (result.isEmpty()) {
+        const { leaveId, mark } = req.query;
+        const leave = await Leave.findById(leaveId);
+        if (leave) {
+          if (leave.status === "rejected" || leave.status === "approved") {
+            return res.status(400).json({
+              success: false,
+              error: `Leave is already ${leave.status}`
+            });
+          }
+          leave.status = mark;
+          await leave.save();
+          if (mark === "approved") {
+            const leaveAttendance = [];
+            for (
+              let date = new Date(leave.startDate);
+              date <= leave.endDate;
+              date.setDate(date.getDate() + 1)
+            ) {
+              leaveAttendance.push({
+                userId: leave.userId,
+                date: date.toISOString().split("T")[0],
+                status: "leave"
+              });
+            }
+            await Attendance.insertMany(leaveAttendance);
+          }
+          const user = await User.findById(leave.userId).select("-password");
+          const htmlMessage = `
+          <div>
+            <h1>Dear ${user.username}!</h1>
+            <h2>Your leave request has been ${mark} by admin</h2>
+            <p>Start Date: ${leave.startDate}</p>
+            <p>End Date: ${leave.endDate}</p>
+            <p>Reason: ${leave.reason}</p>
+          </div>
+          `;
+          mailTransporter.sendMail(
+            {
+              to: user.email,
+              Subject: "Leave Request Reviewed",
+              html: htmlMessage
+            },
+            err => {
+              if (err) {
+                res.status(500).json({
+                  success: false,
+                  error: "Error Occurred on Server Side",
+                  message: err.message
+                });
+              } else {
+                res.status(200).json({
+                  success: false,
+                  error: `Leave ${mark} successfully`
+                });
+              }
+            }
+          );
         } else {
           res.status(400).json({ success: false, error: "Invalid leaveId" });
         }
