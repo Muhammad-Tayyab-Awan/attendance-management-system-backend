@@ -30,15 +30,8 @@ router.post(
       if (result.isEmpty()) {
         const userId = req.userId;
         let { startDate, endDate, reason } = req.body;
-        const date = new Date();
-        const today = new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-          0,
-          0,
-          0,
-          0
+        let today = new Date(
+          new Date().toISOString().split("T")[0] + "T00:00:00.000Z"
         );
         endDate = new Date(endDate);
         startDate = new Date(startDate);
