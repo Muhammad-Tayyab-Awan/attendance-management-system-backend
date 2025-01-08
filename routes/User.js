@@ -5,6 +5,7 @@ import { body, cookie, param, validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
 import mailTransporter from "../utils/mailTransporter.js";
 import verifyLogin from "../middlewares/verifyLogin.js";
+import verifyAdminLogin from "../middlewares/verifyAdminLogin.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const API_URI = process.env.API_URI;
@@ -383,6 +384,59 @@ router.get(
                 msg: "User Verified Successfully"
               });
             } else if (user && user.status) {
+              res.status(400).json({
+                success: false,
+                msg: "User Already Verified"
+              });
+            } else {
+              res.status(400).json({
+                success: false,
+                error: "Invalid request"
+              });
+            }
+          }
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.errors
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Error Occurred on Server Side",
+        message: error.message
+      });
+    }
+  }
+);
+
+router.get(
+  "/verify-user/:verificationToken",
+  verifyAdminLogin,
+  param("verificationToken").isJWT(),
+  async (req, res) => {
+    try {
+      const result = validationResult(req);
+      if (result.isEmpty()) {
+        const verificationToken = req.params.verificationToken;
+        jwt.verify(verificationToken, JWT_SECRET, async (err, decodedToken) => {
+          if (err) {
+            res.status(400).json({
+              success: false,
+              error: "Invalid request"
+            });
+          } else {
+            const user = await User.findById(decodedToken.userId);
+            if (user && !user.verified) {
+              user.verified = true;
+              await user.save();
+              res.status(200).json({
+                success: true,
+                msg: "User Verified Successfully"
+              });
+            } else if (user && user.verified) {
               res.status(400).json({
                 success: false,
                 msg: "User Already Verified"
