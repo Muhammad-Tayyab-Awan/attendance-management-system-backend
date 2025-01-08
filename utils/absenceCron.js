@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import User from "../models/Users.js";
 import Attendance from "../models/Attendance.js";
+import Leave from "../models/Leave.js";
 
 const absenceCronHour = process.env.ABSENCE_CRON_HOUR;
 const absenceCronMin = process.env.ABSENCE_CRON_MIN;
@@ -15,6 +16,15 @@ const startAbsenceCronJob = () => {
           let attendedUsers = await Attendance.find({ date: today }).distinct(
             "userId"
           );
+
+          let usersWithLeave = await Leave.find({
+            $or: [{ status: "pending" }, { status: "approved" }],
+            startDate: { $lte: today },
+            endDate: { $gte: today }
+          }).distinct("userId");
+
+          usersWithLeave = usersWithLeave.map((userId) => userId.toString());
+
           const users = await User.find({ status: true, role: "user" }).select(
             "_id"
           );
@@ -23,7 +33,8 @@ const startAbsenceCronJob = () => {
 
           const absentUsers = users
             .map((user) => user._id.toString())
-            .filter((userId) => !attendedUsers.includes(userId));
+            .filter((userId) => !attendedUsers.includes(userId))
+            .filter((userId) => !usersWithLeave.includes(userId));
 
           if (absentUsers.length > 0) {
             absentUsers.forEach(async (userId) => {
