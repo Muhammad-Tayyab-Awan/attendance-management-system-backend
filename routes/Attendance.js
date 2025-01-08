@@ -1,7 +1,7 @@
 import express from "express";
 import Attendance from "../models/Attendance.js";
 import verifyLogin from "../middlewares/verifyLogin.js";
-import { body, validationResult } from "express-validator";
+import Leave from "../models/Leave.js";
 
 const router = express.Router();
 
@@ -13,10 +13,23 @@ router.route("/").post(verifyLogin, async (req, res) => {
       userId: userId,
       date: date
     });
+    const today = new Date().toISOString().split("T")[0];
+    let todayLeave = await Leave.find({
+      userId: userId,
+      $or: [{ status: "pending" }, { status: "approved" }],
+      startDate: { $lte: today },
+      endDate: { $gte: today }
+    }).distinct("userId");
+
     if (attendance) {
       res
         .status(400)
         .json({ success: false, error: "Attendance already marked" });
+    } else if (todayLeave.length > 0) {
+      res.status(400).json({
+        success: false,
+        error: "You are on leave, attendance cannot be marked"
+      });
     } else {
       const todayStartTime = new Date().setHours(7, 0, 0, 0);
       const currentTime = Date.now();
