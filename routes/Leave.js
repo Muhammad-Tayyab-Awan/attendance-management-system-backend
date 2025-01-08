@@ -73,10 +73,10 @@ router.post(
         }).select("email");
 
         if (adminEmails.length > 1) {
-          adminEmails = adminEmails.map((admin) => admin.email).join(",");
+          adminEmails = adminEmails.map(admin => admin.email).join(",");
         }
 
-        adminEmails = adminEmails.map((admin) => admin.email);
+        adminEmails = adminEmails.map(admin => admin.email);
 
         mailTransporter.sendMail(
           {
@@ -84,7 +84,7 @@ router.post(
             subject: "Leave Request Notification",
             html: htmlMessage
           },
-          (err) => {
+          err => {
             if (err) {
               res.status(500).json({
                 success: false,
@@ -265,12 +265,10 @@ router.put(
         const leave = await Leave.findById(leaveId);
         if (leave && leave.userId.toString() === userId.toString()) {
           if (leave.status === "rejected") {
-            return res
-              .status(200)
-              .json({
-                success: false,
-                error: "You can't updated rejected leaves"
-              });
+            return res.status(200).json({
+              success: false,
+              error: "You can't updated rejected leaves"
+            });
           }
           const { reason } = req.body;
           let today = new Date(
