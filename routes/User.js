@@ -54,8 +54,13 @@ router
                   .status(401)
                   .json({ success: false, error: "Invalid request" });
               } else {
-                const user = await User.findById(decodedToken.adminId);
-                if (user && user.role === "admin" && user.verified === true) {
+                const user = await User.findById(decodedToken.userId);
+                if (
+                  user &&
+                  user.role === "admin" &&
+                  user.verified === true &&
+                  user.status === true
+                ) {
                   const { password } = req.body;
                   const salt = await bcrypt.genSalt(10);
                   const hashedPassword = await bcrypt.hash(password, salt);
@@ -123,12 +128,27 @@ router
                   JWT_SECRET
                 );
                 const htmlMessage = `<h2>Dear ${user.firstName} ${user.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-email/${verificationToken}">Verify Now</a>`;
+
+                let adminEmails = await User.find({
+                  role: "admin",
+                  status: true,
+                  verified: true
+                }).select("email");
+
+                if (adminEmails.length > 1) {
+                  adminEmails = adminEmails
+                    .map((admin) => admin.email)
+                    .join(",");
+                }
+
+                adminEmails = adminEmails.map((admin) => admin.email);
+
                 const adminMessage = `<h2>Dear ${user.firstName} ${user.lastName}! A new user account has been created. Please verify the account by visiting the link below</h2><a href="${API_URI}/api/user/verify-user/${verificationToken}">Verify Now</a>`;
                 mailTransporter.sendMail(
                   {
-                    to: user.email,
-                    subject: "User Email Verification",
-                    html: htmlMessage
+                    to: adminEmails,
+                    subject: "New User Verification",
+                    html: adminMessage
                   },
                   (err) => {
                     if (err) {
@@ -138,10 +158,27 @@ router
                         message: err.message
                       });
                     } else {
-                      res.status(201).json({
-                        success: true,
-                        msg: `User Registration Successful. We have sent an email to ${user.email}, please visit your mailbox to verify your account`
-                      });
+                      mailTransporter.sendMail(
+                        {
+                          to: user.email,
+                          subject: "User Email Verification",
+                          html: htmlMessage
+                        },
+                        (err) => {
+                          if (err) {
+                            res.status(500).json({
+                              success: false,
+                              error: "Error Occurred on Server Side",
+                              message: err.message
+                            });
+                          } else {
+                            res.status(201).json({
+                              success: true,
+                              msg: `User Registration Successful. We have sent an email to ${user.email}, please visit your mailbox to verify your account`
+                            });
+                          }
+                        }
+                      );
                     }
                   }
                 );
@@ -311,30 +348,37 @@ router.post(
         if (user) {
           const passwordMatched = await bcrypt.compare(password, user.password);
           if (passwordMatched) {
-            if (user.status === true) {
-              const authenticationToken = jwt.sign(
-                { userId: user.id },
-                JWT_SECRET
-              );
-              if (user.role == "admin") {
-                res.cookie("admin-auth-token", authenticationToken, {
-                  httpOnly: true
-                });
-              } else {
-                res.cookie("user-auth-token", authenticationToken, {
-                  httpOnly: true
-                });
-              }
-              res.status(200).json({
-                success: true,
-                msg: "Welcome back! Logged In Successfully"
-              });
-            } else {
+            if (user.verified === false) {
               res.status(401).json({
                 success: false,
-                error:
-                  "Your account is not verified. Verify it by visiting link we sent to your email to login again"
+                error: "Your account is not verified by admins"
               });
+            } else {
+              if (user.status === true) {
+                const authenticationToken = jwt.sign(
+                  { userId: user.id },
+                  JWT_SECRET
+                );
+                if (user.role == "admin") {
+                  res.cookie("admin-auth-token", authenticationToken, {
+                    httpOnly: true
+                  });
+                } else {
+                  res.cookie("user-auth-token", authenticationToken, {
+                    httpOnly: true
+                  });
+                }
+                res.status(200).json({
+                  success: true,
+                  msg: "Welcome back! Logged In Successfully"
+                });
+              } else {
+                res.status(401).json({
+                  success: false,
+                  error:
+                    "Your account is not verified. Verify it by visiting link we sent to your email to login again"
+                });
+              }
             }
           } else {
             res.status(401).json({
