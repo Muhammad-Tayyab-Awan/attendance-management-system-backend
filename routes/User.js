@@ -381,12 +381,12 @@ router.get(
               await user.save();
               res.status(200).json({
                 success: true,
-                msg: "User Verified Successfully"
+                msg: "User Email Verified Successfully"
               });
             } else if (user && user.status) {
               res.status(400).json({
                 success: false,
-                msg: "User Already Verified"
+                msg: "User Email Already Verified"
               });
             } else {
               res.status(400).json({
