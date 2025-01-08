@@ -1,5 +1,6 @@
 import express from "express";
 import verifyUserLogin from "../middlewares/verifyUserLogin.js";
+import verifyAdminLogin from "../middlewares/verifyAdminLogin.js";
 import Leave from "../models/Leave.js";
 import { body, query, validationResult } from "express-validator";
 import mailTransporter from "../utils/mailTransporter.js";
@@ -63,7 +64,7 @@ router.post(
             error: `You can't submit another leave as your leave is already ${presentLeave.status}`
           });
         }
-        await Leave.create({
+        const leave = await Leave.create({
           userId,
           startDate,
           endDate,
@@ -75,6 +76,7 @@ router.post(
           <h1>Dear Admin!</h1>
           <h2>A leave request is pending to approve</h2>
           <h3>Username : ${user.username}</h3>
+          <h3>Leave Id : ${leave._id}</h3>
           <p>Start Date: ${startDate}</p>
           <p>End Date: ${endDate}</p>
           <p>Reason: ${reason}</p>
