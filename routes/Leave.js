@@ -100,14 +100,15 @@ router.post(
 
         let adminEmails = await User.find({
           role: "admin",
-          status: true
+          status: true,
+          verified: true
         }).select("email");
 
         if (adminEmails.length > 1) {
-          adminEmails = adminEmails.map(admin => admin.email).join(",");
+          adminEmails = adminEmails.map((admin) => admin.email).join(",");
         }
 
-        adminEmails = adminEmails.map(admin => admin.email);
+        adminEmails = adminEmails.map((admin) => admin.email);
 
         mailTransporter.sendMail(
           {
@@ -115,7 +116,7 @@ router.post(
             subject: "Leave Request Notification",
             html: htmlMessage
           },
-          err => {
+          (err) => {
             if (err) {
               res.status(500).json({
                 success: false,
@@ -386,7 +387,7 @@ router.get(
               Subject: "Leave Request Reviewed",
               html: htmlMessage
             },
-            err => {
+            (err) => {
               if (err) {
                 res.status(500).json({
                   success: false,
