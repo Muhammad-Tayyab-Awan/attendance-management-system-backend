@@ -247,4 +247,61 @@ router.get(
   }
 );
 
+router.put(
+  "/",
+  verifyUserLogin,
+  [
+    body("reason", "Reason must be one of: medical, personal, academic, other")
+      .isString()
+      .isIn(["medical", "personal", "academic", "other"]),
+    query("leaveId").isMongoId()
+  ],
+  async (req, res) => {
+    try {
+      const result = validationResult(req);
+      if (result.isEmpty()) {
+        const userId = req.userId;
+        const { leaveId } = req.query;
+        const leave = await Leave.findById(leaveId);
+        if (leave && leave.userId.toString() === userId.toString()) {
+          if (leave.status === "rejected") {
+            return res
+              .status(200)
+              .json({
+                success: false,
+                error: "You can't updated rejected leaves"
+              });
+          }
+          const { reason } = req.body;
+          let today = new Date(
+            new Date().toISOString().split("T")[0] + "T00:00:00.000Z"
+          );
+          if (leave.startDate < today) {
+            return res.status(400).json({
+              success: false,
+              error: "Leave has already started"
+            });
+          }
+          leave.reason = reason;
+          await leave.save();
+          res.status(200).json({
+            success: false,
+            error: "Leave reason updated successfully"
+          });
+        } else {
+          res.status(400).json({ success: false, error: "Invalid leaveId" });
+        }
+      } else {
+        res.status(400).json({ success: false, error: result.errors });
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Error Occurred on Server Side",
+        message: error.message
+      });
+    }
+  }
+);
+
 export default router;
