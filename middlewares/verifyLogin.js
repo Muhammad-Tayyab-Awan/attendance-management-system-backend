@@ -13,7 +13,7 @@ const verifyLogin = async (req, res, next) => {
           res.status(401).json({ success: false, error: "Invalid request" });
         } else {
           const user = await User.findById(decodedToken.userId);
-          if (user && user.status === true) {
+          if (user && user.status === true && user.verified === true) {
             if (user.role === "admin") {
               req.adminId = user._id;
             } else {
