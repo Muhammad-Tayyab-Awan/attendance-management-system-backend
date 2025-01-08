@@ -23,7 +23,7 @@ const leaveSchema = new Schema(
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
-      default: "Pending"
+      default: "pending"
     }
   },
   {
