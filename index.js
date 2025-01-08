@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import connectToDatabase from "./utils/dbConnection.js";
 import startAbsenceCronJob from "./utils/absenceCron.js";
+import startLeavesApprovalNotificationCronJob from "./utils/leavesApprovalNotificationCron.js";
 import userRouter from "./routes/User.js";
 import attendanceRoute from "./routes/Attendance.js";
 import leaveRoute from "./routes/Leave.js";
@@ -36,6 +37,7 @@ app.listen(PORT, () => {
     .then((res) => {
       console.log(res);
       startAbsenceCronJob();
+      startLeavesApprovalNotificationCronJob();
     })
     .catch(() => {
       console.log({ success: false, msg: "Connection Error Occurred" });
