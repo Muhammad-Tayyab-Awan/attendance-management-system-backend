@@ -18,7 +18,7 @@ const verifyAdminLogin = async (req, res, next) => {
                 .status(401)
                 .json({ success: false, error: "Invalid request" });
             }
-            req.memberId = user._id;
+            req.adminId = user._id;
             next();
           } else {
             res.status(401).json({ success: false, error: "Invalid request" });
