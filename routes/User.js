@@ -117,6 +117,7 @@ router
             });
           } else {
             const { password } = req.body;
+            const passwordCopy = password;
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
             req.body.password = hashedPassword;
@@ -127,7 +128,17 @@ router
                   { userId: user.id },
                   JWT_SECRET
                 );
-                const htmlMessage = `<h2>Dear ${user.firstName} ${user.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-email/${verificationToken}">Verify Now</a>`;
+                const htmlMessage = `
+                <div>
+                <h2>Dear ${user.firstName} ${user.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-email/${verificationToken}">Verify Now</a>
+                </div>
+                <div>
+                <h2>Your Login Credentials</h2>
+                <p>Email : ${user.email}</p>
+                <p>Password : ${passwordCopy}</p>
+                <p>Keep this credentials safe and do not share with anyone</p>
+                </div>
+                `;
 
                 let adminEmails = await User.find({
                   role: "admin",
