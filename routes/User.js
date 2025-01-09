@@ -249,6 +249,8 @@ router
   .delete(verifyLogin, async (req, res) => {
     try {
       const userId = req.userId || req.adminId;
+      await Leave.deleteMany({ userId: userId });
+      await Attendance.deleteMany({ userId: userId });
       const user = await User.findByIdAndDelete(userId);
       res.status(200).json({
         success: true,
