@@ -653,4 +653,140 @@ router.get(
   }
 );
 
+router.delete(
+  "/all-users",
+  verifyAdminLogin,
+  [
+    query("status").isBoolean({ loose: false }).optional(),
+    query("verified").isBoolean({ loose: false }).optional(),
+    query("role").isString().isIn(["user", "admin"]).optional(),
+    query("gender").isString().isIn(["male", "female"]).optional(),
+    query("username")
+      .isString()
+      .matches(/^[a-z0-9]{6,18}$/)
+      .optional(),
+    query("email").isEmail().optional(),
+    body("firstName")
+      .matches(/^[A-Z][a-z]{3,20}$/)
+      .optional(),
+    body("lastName")
+      .matches(/^[A-Z][a-z]{3,30}$/)
+      .optional(),
+    body("address")
+      .isString()
+      .matches(/^[a-zA-Z0-9\s,.\-]{10,70}$/)
+      .optional(),
+    body("profileImage").isURL().optional(),
+    body("createdAt")
+      .isISO8601({
+        strict: true,
+        strictSeparator: true
+      })
+      .optional(),
+    body("userId").isMongoId().optional()
+  ],
+  async (req, res) => {
+    try {
+      const result = validationResult(req);
+      if (result.isEmpty()) {
+        let queries = req.query;
+        if (Object.keys(queries).length === 0) {
+          const allUsers = await User.deleteMany({ _id: { $ne: req.adminId } });
+          if (allUsers.deletedCount === 0) {
+            res.status(404).json({
+              success: false,
+              error: "No User Deleted"
+            });
+          } else {
+            res.status(200).json({
+              success: false,
+              msg: `${allUsers.deletedCount} users deleted successfully`
+            });
+          }
+        } else if (
+          validateFilterQueries(queries, [
+            "status",
+            "verified",
+            "role",
+            "gender",
+            "username",
+            "email",
+            "firstName",
+            "lastName",
+            "address",
+            "profileImage",
+            "createdAt",
+            "userId"
+          ])
+        ) {
+          if (queries.userId || queries.username || queries.email) {
+            const filter =
+              queries.userId && queries.userId !== req.adminId.toString()
+                ? { _id: queries.userId }
+                : queries.username
+                ? { username: queries.username }
+                : { email: queries.email };
+            const user = await User.deleteOne(filter);
+            if (user.deletedCount > 0) {
+              return res
+                .status(200)
+                .json({ success: true, msg: "User deleted successfully" });
+            } else {
+              return res.status(404).json({
+                success: false,
+                error: "No User Found"
+              });
+            }
+          }
+
+          const date = new Date(queries.createdAt);
+
+          if (queries.createdAt) {
+            queries = {
+              ...queries,
+              createdAt: {
+                $gte: date,
+                $lt: new Date(date.getTime() + 24 * 60 * 60 * 1000)
+              }
+            };
+          }
+
+          const deletedUsers = await User.deleteMany({
+            _id: { $ne: req.adminId },
+            ...queries
+          });
+
+          if (deletedUsers.deletedCount === 0) {
+            res.status(404).json({
+              success: false,
+              error: "No Users Found"
+            });
+          } else {
+            res.status(200).json({
+              success: true,
+              msg: `${deletedUsers.deletedCount} users deleted successfully`
+            });
+          }
+        } else {
+          res.status(400).json({
+            success: false,
+            error: "Invalid query parameters"
+          });
+        }
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.errors
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Error Occurred on Server Side",
+        message: error.message
+      });
+    }
+  }
+);
+
 export default router;
