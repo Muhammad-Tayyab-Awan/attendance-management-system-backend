@@ -843,4 +843,45 @@ router.delete(
   }
 );
 
+router.get(
+  "/verify/:userId",
+  verifyAdminLogin,
+  param("userId").isMongoId(),
+  async (req, res) => {
+    try {
+      const result = validationResult(req);
+      if (result.isEmpty()) {
+        const userId = req.params.userId;
+        const user = await User.findOne({
+          _id: userId
+        }).select(["-password", "-__v", "-createdAt", "-updatedAt"]);
+        if (user) {
+          if (user.verified) {
+            res.status(400).json({
+              success: false,
+              error: "User Already Verified"
+            });
+          } else {
+            user.verified = true;
+            await user.save();
+            res
+              .status(200)
+              .json({ success: true, msg: "User verified successfully" });
+          }
+        } else {
+          res.status(400).json({ success: false, error: "No user found" });
+        }
+      } else {
+        res.status(400).json({ success: false, error: result.errors });
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Error Occurred on Server Side",
+        message: error.message
+      });
+    }
+  }
+);
+
 export default router;
