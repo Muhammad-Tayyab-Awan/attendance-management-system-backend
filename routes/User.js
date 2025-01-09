@@ -15,6 +15,8 @@ import verifyAdminLogin from "../middlewares/verifyAdminLogin.js";
 import validateFilterQueries from "../utils/validateFilterQueries.js";
 import Leave from "../models/Leave.js";
 import Attendance from "../models/Attendance.js";
+import upload from "../middlewares/multerConfig.js";
+import cloudinary from "../utils/cloudinaryConfig.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const API_URI = process.env.API_URI;
@@ -884,4 +886,74 @@ router.get(
   }
 );
 
+router.post(
+  "/upload",
+  verifyLogin,
+  upload.single("photo"),
+  async (req, res) => {
+    try {
+      let userId = req.userId || req.adminId;
+      const user = await User.findById(userId).select("profileImage");
+      if (
+        user.profileImage ===
+          "https://cdn-icons-png.flaticon.com/512/1999/1999625.png" ||
+        user.profileImage ===
+          "https://cdn-icons-png.flaticon.com/512/6997/6997662.png" ||
+        user.profileImage === undefined
+      ) {
+        const fileName = userId.toString();
+        cloudinary.uploader
+          .upload_stream(
+            { folder: "ams_photos", public_id: fileName },
+            async (error, result) => {
+              if (error) {
+                res.status(500).json({
+                  success: false,
+                  error: "Error Occurred on Server Side",
+                  message: error.message
+                });
+              } else {
+                user.profileImage = result.secure_url;
+                await user.save();
+                res.status(200).json({
+                  success: true,
+                  msg: "Profile Image Uploaded Successfully"
+                });
+              }
+            }
+          )
+          .end(req.file.buffer);
+      } else {
+        const fileName = userId.toString();
+        cloudinary.uploader
+          .upload_stream(
+            { folder: "ams_photos", public_id: fileName, overwrite: true },
+            async (error, result) => {
+              if (error) {
+                res.status(500).json({
+                  success: false,
+                  error: "Error Occurred on Server Side",
+                  message: error.message
+                });
+              } else {
+                user.profileImage = result.secure_url;
+                await user.save();
+                res.status(200).json({
+                  success: true,
+                  msg: "Profile Image Updated Successfully"
+                });
+              }
+            }
+          )
+          .end(req.file.buffer);
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Error Occurred on Server Side",
+        message: error.message
+      });
+    }
+  }
+);
 export default router;
