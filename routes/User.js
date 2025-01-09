@@ -13,6 +13,8 @@ import mailTransporter from "../utils/mailTransporter.js";
 import verifyLogin from "../middlewares/verifyLogin.js";
 import verifyAdminLogin from "../middlewares/verifyAdminLogin.js";
 import validateFilterQueries from "../utils/validateFilterQueries.js";
+import Leave from "../models/Leave.js";
+import Attendance from "../models/Attendance.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const API_URI = process.env.API_URI;
@@ -691,6 +693,8 @@ router.delete(
       if (result.isEmpty()) {
         let queries = req.query;
         if (Object.keys(queries).length === 0) {
+          await Leave.deleteMany({ userId: { $ne: req.adminId } });
+          await Attendance.deleteMany({ userId: { $ne: req.adminId } });
           const allUsers = await User.deleteMany({ _id: { $ne: req.adminId } });
           if (allUsers.deletedCount === 0) {
             res.status(404).json({
@@ -719,6 +723,7 @@ router.delete(
             "userId"
           ])
         ) {
+          const user = await User.findById(req.adminId);
           if (queries.userId || queries.username || queries.email) {
             const filter =
               queries.userId && queries.userId !== req.adminId.toString()
@@ -726,8 +731,25 @@ router.delete(
                 : queries.username
                 ? { username: queries.username }
                 : { email: queries.email };
-            const user = await User.deleteOne(filter);
-            if (user.deletedCount > 0) {
+            if (
+              user.email === filter.email ||
+              user.username === filter.username
+            ) {
+              return res.status(400).json({
+                success: false,
+                error: "You can't delete your own account"
+              });
+            }
+            const userToBeDeleted = await User.findOne(filter).select([
+              "-password",
+              "-__v"
+            ]);
+            if (userToBeDeleted) {
+              await Leave.deleteMany({
+                userId: userToBeDeleted._id
+              });
+              await Attendance.deleteMany({ userId: userToBeDeleted._id });
+              await User.deleteOne(userToBeDeleted._id);
               return res
                 .status(200)
                 .json({ success: true, msg: "User deleted successfully" });
@@ -750,9 +772,25 @@ router.delete(
               }
             };
           }
+          const allUsersToBeDeleted = await User.find({
+            _id: { $ne: req.adminId },
+            email: { $ne: user.email },
+            username: { $ne: user.username },
+            ...queries
+          }).select("_id");
+
+          await Leave.deleteMany({
+            userId: { $in: allUsersToBeDeleted.map((user) => user._id) }
+          });
+          
+          await Attendance.deleteMany({
+            userId: { $in: allUsersToBeDeleted.map((user) => user._id) }
+          });
 
           const deletedUsers = await User.deleteMany({
             _id: { $ne: req.adminId },
+            email: { $ne: user.email },
+            username: { $ne: user.username },
             ...queries
           });
 
