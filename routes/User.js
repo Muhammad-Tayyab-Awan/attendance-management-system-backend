@@ -956,4 +956,32 @@ router.post(
     }
   }
 );
+
+router.delete("/delete-photo", verifyLogin, async (req, res) => {
+  try {
+    const userId = req.userId || req.adminId;
+    const user = await User.findById(userId).select("profileImage");
+    if (user.profileImage) {
+      const public_id = `ams_photos/${userId.toString()}`;
+      await cloudinary.uploader.destroy(public_id);
+      user.profileImage = undefined;
+      await user.save();
+      res.status(200).json({
+        success: true,
+        msg: "Profile Image Deleted Successfully"
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: "No Profile Image Found"
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Error Occurred on Server Side",
+      message: error.message
+    });
+  }
+});
 export default router;
