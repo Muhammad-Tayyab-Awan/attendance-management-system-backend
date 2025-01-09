@@ -249,6 +249,20 @@ router
   .delete(verifyLogin, async (req, res) => {
     try {
       const userId = req.userId || req.adminId;
+      if (req.adminId) {
+        const allAdmins = await User.find({
+          role: "admin",
+          status: true,
+          verified: true
+        });
+        if (allAdmins.length === 1) {
+          return res.status(400).json({
+            success: false,
+            error:
+              "You are the only admin if you want to delete your account add another admin first"
+          });
+        }
+      }
       await Leave.deleteMany({ userId: userId });
       await Attendance.deleteMany({ userId: userId });
       const user = await User.findByIdAndDelete(userId);
@@ -784,7 +798,7 @@ router.delete(
           await Leave.deleteMany({
             userId: { $in: allUsersToBeDeleted.map((user) => user._id) }
           });
-          
+
           await Attendance.deleteMany({
             userId: { $in: allUsersToBeDeleted.map((user) => user._id) }
           });
