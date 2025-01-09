@@ -1,11 +1,18 @@
 import express from "express";
 import User from "../models/Users.js";
 import bcrypt from "bcryptjs";
-import { body, cookie, param, validationResult } from "express-validator";
+import {
+  body,
+  cookie,
+  param,
+  query,
+  validationResult
+} from "express-validator";
 import jwt from "jsonwebtoken";
 import mailTransporter from "../utils/mailTransporter.js";
 import verifyLogin from "../middlewares/verifyLogin.js";
 import verifyAdminLogin from "../middlewares/verifyAdminLogin.js";
+import validateFilterQueries from "../utils/validateFilterQueries.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const API_URI = process.env.API_URI;
@@ -504,6 +511,132 @@ router.get(
             }
           }
         });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.errors
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Error Occurred on Server Side",
+        message: error.message
+      });
+    }
+  }
+);
+
+router.get(
+  "/all-users",
+  verifyAdminLogin,
+  [
+    query("status").isBoolean({ loose: false }).optional(),
+    query("verified").isBoolean({ loose: false }).optional(),
+    query("role").isString().isIn(["user", "admin"]).optional(),
+    query("gender").isString().isIn(["male", "female"]).optional(),
+    query("username")
+      .isString()
+      .matches(/^[a-z0-9]{6,18}$/)
+      .optional(),
+    query("email").isEmail().optional(),
+    body("firstName")
+      .matches(/^[A-Z][a-z]{3,20}$/)
+      .optional(),
+    body("lastName")
+      .matches(/^[A-Z][a-z]{3,30}$/)
+      .optional(),
+    body("address")
+      .isString()
+      .matches(/^[a-zA-Z0-9\s,.\-]{10,70}$/)
+      .optional(),
+    body("profileImage").isURL().optional(),
+    body("createdAt")
+      .isISO8601({
+        strict: true,
+        strictSeparator: true
+      })
+      .optional(),
+    body("userId").isMongoId().optional()
+  ],
+  async (req, res) => {
+    try {
+      const result = validationResult(req);
+      if (result.isEmpty()) {
+        let queries = req.query;
+        if (Object.keys(queries).length === 0) {
+          const allUsers = await User.find().select(["-password", "-__v"]);
+          if (allUsers.length === 0) {
+            res.status(404).json({
+              success: false,
+              error: "No Users Found"
+            });
+          } else {
+            res.status(200).json({ success: false, allUsers });
+          }
+        } else if (
+          validateFilterQueries(queries, [
+            "status",
+            "verified",
+            "role",
+            "gender",
+            "username",
+            "email",
+            "firstName",
+            "lastName",
+            "address",
+            "profileImage",
+            "createdAt",
+            "userId"
+          ])
+        ) {
+          if (queries.userId || queries.username || queries.email) {
+            const filter = queries.userId
+              ? { _id: queries.userId }
+              : queries.username
+              ? { username: queries.username }
+              : { email: queries.email };
+            const user = await User.findOne(filter).select([
+              "-password",
+              "-__v"
+            ]);
+            if (user) {
+              return res.status(200).json({ success: true, user });
+            } else {
+              return res.status(404).json({
+                success: false,
+                error: "No User Found"
+              });
+            }
+          }
+
+          const date = new Date(queries.createdAt);
+
+          if (queries.createdAt) {
+            queries = {
+              ...queries,
+              createdAt: {
+                $gte: date,
+                $lt: new Date(date.getTime() + 24 * 60 * 60 * 1000)
+              }
+            };
+          }
+
+          const users = await User.find(queries).select(["-password", "-__v"]);
+          if (users.length === 0) {
+            res.status(404).json({
+              success: false,
+              error: "No Users Found"
+            });
+          } else {
+            res.status(200).json({ success: true, users });
+          }
+        } else {
+          res.status(400).json({
+            success: false,
+            error: "Invalid query parameters"
+          });
+        }
       } else {
         res.status(400).json({
           success: false,
