@@ -20,6 +20,7 @@ import cloudinary from "../utils/cloudinaryConfig.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const API_URI = process.env.API_URI;
+const cloudinaryFolder = process.env.CLOUDINARY_FOLDER;
 
 const router = express.Router();
 
@@ -904,7 +905,7 @@ router.post(
         const fileName = userId.toString();
         cloudinary.uploader
           .upload_stream(
-            { folder: "ams_photos", public_id: fileName },
+            { folder: `${cloudinaryFolder}`, public_id: fileName },
             async (error, result) => {
               if (error) {
                 res.status(500).json({
@@ -927,7 +928,11 @@ router.post(
         const fileName = userId.toString();
         cloudinary.uploader
           .upload_stream(
-            { folder: "ams_photos", public_id: fileName, overwrite: true },
+            {
+              folder: `${cloudinaryFolder}`,
+              public_id: fileName,
+              overwrite: true
+            },
             async (error, result) => {
               if (error) {
                 res.status(500).json({
@@ -962,7 +967,7 @@ router.delete("/delete-photo", verifyLogin, async (req, res) => {
     const userId = req.userId || req.adminId;
     const user = await User.findById(userId).select("profileImage");
     if (user.profileImage) {
-      const public_id = `ams_photos/${userId.toString()}`;
+      const public_id = `${cloudinaryFolder}/${userId.toString()}`;
       await cloudinary.uploader.destroy(public_id);
       user.profileImage = undefined;
       await user.save();
