@@ -1,3 +1,4 @@
+import cors from "cors";
 import "dotenv/config";
 import express from "express";
 import bodyParser from "body-parser";
@@ -18,6 +19,16 @@ const PORT = process.env.PORT || 3000;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS);
+
+const corsOption = {
+  origin: allowedOrigins,
+  credentials: true,
+  optionSuccessStatus: 200
+};
+
+app.use(cors(corsOption));
 
 app.use("/api/user", userRouter);
 app.use("/api/attendance", attendanceRoute);
