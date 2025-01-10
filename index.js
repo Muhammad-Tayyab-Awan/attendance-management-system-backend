@@ -10,6 +10,7 @@ import userRouter from "./routes/User.js";
 import attendanceRoute from "./routes/Attendance.js";
 import leaveRoute from "./routes/Leave.js";
 import gradeRoute from "./routes/Grade.js";
+import reportRoute from "./routes/Report.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +23,7 @@ app.use("/api/user", userRouter);
 app.use("/api/attendance", attendanceRoute);
 app.use("/api/leave", leaveRoute);
 app.use("/api/grade", gradeRoute);
+app.use("/api/report", reportRoute);
 
 app.get("/", (req, res) => {
   res.send({
