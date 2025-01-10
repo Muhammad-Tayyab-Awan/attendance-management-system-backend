@@ -1080,4 +1080,22 @@ router.get("/logout", verifyLogin, async (req, res) => {
   }
 });
 
+router.get("/verify-login", verifyLogin, async (req, res) => {
+  try {
+    const userId = req.userId || req.adminId;
+    const user = await User.findById(userId).select("-password");
+    if (user && user.status && user.verified) {
+      res.status(200).json({ success: true, msg: "User is logged in" });
+    } else {
+      res.status(401).json({ success: false, msg: "User is not logged in" });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Error Occurred on Server Side",
+      message: error.message
+    });
+  }
+});
+
 export default router;
