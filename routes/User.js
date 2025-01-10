@@ -1041,4 +1041,43 @@ router.delete("/delete-photo", verifyLogin, async (req, res) => {
     });
   }
 });
+
+router.get("/logout", verifyLogin, async (req, res) => {
+  try {
+    const userId = req.userId || req.adminId;
+    const user = await User.findById(userId).select("-password");
+    if (user.role === "admin") {
+      res.clearCookie("admin-auth-token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict"
+      });
+      res.clearCookie("user-auth-token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict"
+      });
+      res.status(200).json({ success: true, msg: "Logout successfully!" });
+    } else {
+      res.clearCookie("admin-auth-token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict"
+      });
+      res.clearCookie("user-auth-token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict"
+      });
+      res.status(200).json({ success: true, msg: "Logout successfully!" });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Error Occurred on Server Side",
+      message: error.message
+    });
+  }
+});
+
 export default router;
