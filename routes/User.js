@@ -15,6 +15,7 @@ import verifyAdminLogin from "../middlewares/verifyAdminLogin.js";
 import validateFilterQueries from "../utils/validateFilterQueries.js";
 import Leave from "../models/Leave.js";
 import Attendance from "../models/Attendance.js";
+import Grade from "../models/Grade.js";
 import upload from "../middlewares/multerConfig.js";
 import cloudinary from "../utils/cloudinaryConfig.js";
 
@@ -266,6 +267,7 @@ router
           });
         }
       }
+      await Grade.deleteMany({ userId: userId });
       await Leave.deleteMany({ userId: userId });
       await Attendance.deleteMany({ userId: userId });
       const public_id = `${cloudinaryFolder}/${userId.toString()}`;
@@ -786,9 +788,8 @@ router.delete(
               await cloudinary.uploader.destroy(
                 `${cloudinaryFolder}/${userToBeDeleted.id.toString()}`
               );
-              await Leave.deleteMany({
-                userId: userToBeDeleted._id
-              });
+              await Grade.deleteOne({ userId: userToBeDeleted._id });
+              await Leave.deleteMany({ userId: userToBeDeleted._id });
               await Attendance.deleteMany({ userId: userToBeDeleted._id });
               await User.deleteOne(userToBeDeleted._id);
               return res
@@ -839,6 +840,10 @@ router.delete(
             await cloudinary.uploader.destroy(publicId);
           }
 
+          await Grade.deleteMany({
+            userId: { $in: allUsersToBeDeleted.map((user) => user._id) }
+          });
+          
           await Leave.deleteMany({
             userId: { $in: allUsersToBeDeleted.map((user) => user._id) }
           });
