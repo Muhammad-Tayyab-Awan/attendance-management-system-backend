@@ -9,6 +9,7 @@ import startLeavesAutoRejectionCronJob from "./utils/leavesAutoRejectionCron.js"
 import userRouter from "./routes/User.js";
 import attendanceRoute from "./routes/Attendance.js";
 import leaveRoute from "./routes/Leave.js";
+import gradeRoute from "./routes/Grade.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,6 +21,7 @@ app.use(cookieParser());
 app.use("/api/user", userRouter);
 app.use("/api/attendance", attendanceRoute);
 app.use("/api/leave", leaveRoute);
+app.use("/api/grade", gradeRoute);
 
 app.get("/", (req, res) => {
   res.send({
