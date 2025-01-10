@@ -13,16 +13,31 @@ router.get("/", verifyUserLogin, async (req, res) => {
   try {
     const userId = req.userId;
     const grades = await Grade.findOne({ userId: userId });
+    const today = new Date().setHours(23, 59, 59, 999);
     if (grades) {
-      grades.totalDays = (await Attendance.find({ userId })).length;
+      grades.totalDays = (
+        await Attendance.find({ userId, date: { $lte: today } })
+      ).length;
       grades.totalLeaves = (
-        await Attendance.find({ userId, status: "leave" })
+        await Attendance.find({
+          userId,
+          status: "leave",
+          date: { $lte: today }
+        })
       ).length;
       grades.totalPresents = (
-        await Attendance.find({ userId, status: "present" })
+        await Attendance.find({
+          userId,
+          status: "present",
+          date: { $lte: today }
+        })
       ).length;
       grades.totalAbsents = (
-        await Attendance.find({ userId, status: "absent" })
+        await Attendance.find({
+          userId,
+          status: "absent",
+          date: { $lte: today }
+        })
       ).length;
       if (grades.totalDays !== 0) {
         grades.percentage = (grades.totalPresents / grades.totalDays) * 100;
@@ -46,14 +61,30 @@ router.get("/", verifyUserLogin, async (req, res) => {
         grades
       });
     } else {
-      const totalDays = (await Attendance.find({ userId })).length;
-      const totalLeaves = (await Attendance.find({ userId, status: "leave" }))
-        .length;
-      const totalPresents = (
-        await Attendance.find({ userId, status: "present" })
+      const totalDays = (
+        await Attendance.find({ userId, date: { $lte: today } })
       ).length;
-      const totalAbsents = (await Attendance.find({ userId, status: "absent" }))
-        .length;
+      const totalLeaves = (
+        await Attendance.find({
+          userId,
+          status: "leave",
+          date: { $lte: today }
+        })
+      ).length;
+      const totalPresents = (
+        await Attendance.find({
+          userId,
+          status: "present",
+          date: { $lte: today }
+        })
+      ).length;
+      const totalAbsents = (
+        await Attendance.find({
+          userId,
+          status: "absent",
+          date: { $lte: today }
+        })
+      ).length;
       let percentage = 0;
       if (totalDays !== 0) {
         percentage = (totalPresents / totalDays) * 100;
@@ -103,6 +134,7 @@ router.get(
     try {
       const result = validationResult(req);
       if (result.isEmpty()) {
+        const today = new Date().setHours(23, 59, 59, 999);
         const queries = req.query;
         if (Object.keys(queries).length === 0) {
           let users = await User.find({
@@ -117,16 +149,28 @@ router.get(
               const grades = await Grade.findOne({ userId: user });
               if (grades) {
                 grades.totalDays = (
-                  await Attendance.find({ userId: user })
+                  await Attendance.find({ userId: user, date: { $lte: today } })
                 ).length;
                 grades.totalLeaves = (
-                  await Attendance.find({ userId: user, status: "leave" })
+                  await Attendance.find({
+                    userId: user,
+                    status: "leave",
+                    date: { $lte: today }
+                  })
                 ).length;
                 grades.totalPresents = (
-                  await Attendance.find({ userId: user, status: "present" })
+                  await Attendance.find({
+                    userId: user,
+                    status: "present",
+                    date: { $lte: today }
+                  })
                 ).length;
                 grades.totalAbsents = (
-                  await Attendance.find({ userId: user, status: "absent" })
+                  await Attendance.find({
+                    userId: user,
+                    status: "absent",
+                    date: { $lte: today }
+                  })
                 ).length;
                 if (grades.totalDays !== 0) {
                   grades.percentage =
@@ -148,16 +192,29 @@ router.get(
                 await grades.save();
                 userGrades.push(grades);
               } else {
-                const totalDays = (await Attendance.find({ userId: user }))
-                  .length;
+                const totalDays = (
+                  await Attendance.find({ userId: user, date: { $lte: today } })
+                ).length;
                 const totalLeaves = (
-                  await Attendance.find({ userId: user, status: "leave" })
+                  await Attendance.find({
+                    userId: user,
+                    status: "leave",
+                    date: { $lte: today }
+                  })
                 ).length;
                 const totalPresents = (
-                  await Attendance.find({ userId: user, status: "present" })
+                  await Attendance.find({
+                    userId: user,
+                    status: "present",
+                    date: { $lte: today }
+                  })
                 ).length;
                 const totalAbsents = (
-                  await Attendance.find({ userId: user, status: "absent" })
+                  await Attendance.find({
+                    userId: user,
+                    status: "absent",
+                    date: { $lte: today }
+                  })
                 ).length;
                 let percentage = 0;
                 if (totalDays !== 0) {
@@ -196,16 +253,28 @@ router.get(
             const grades = await Grade.findOne({ userId: users });
             if (grades) {
               grades.totalDays = (
-                await Attendance.find({ userId: users })
+                await Attendance.find({ userId: users, date: { $lte: today } })
               ).length;
               grades.totalLeaves = (
-                await Attendance.find({ userId: users, status: "leave" })
+                await Attendance.find({
+                  userId: users,
+                  status: "leave",
+                  date: { $lte: today }
+                })
               ).length;
               grades.totalPresents = (
-                await Attendance.find({ userId: users, status: "present" })
+                await Attendance.find({
+                  userId: users,
+                  status: "present",
+                  date: { $lte: today }
+                })
               ).length;
               grades.totalAbsents = (
-                await Attendance.find({ userId: users, status: "absent" })
+                await Attendance.find({
+                  userId: users,
+                  status: "absent",
+                  date: { $lte: today }
+                })
               ).length;
               if (grades.totalDays !== 0) {
                 grades.percentage =
@@ -230,16 +299,29 @@ router.get(
                 grades
               });
             } else {
-              const totalDays = (await Attendance.find({ userId: users }))
-                .length;
+              const totalDays = (
+                await Attendance.find({ userId: users, date: { $lte: today } })
+              ).length;
               const totalLeaves = (
-                await Attendance.find({ userId: users, status: "leave" })
+                await Attendance.find({
+                  userId: users,
+                  status: "leave",
+                  date: { $lte: today }
+                })
               ).length;
               const totalPresents = (
-                await Attendance.find({ userId: users, status: "present" })
+                await Attendance.find({
+                  userId: users,
+                  status: "present",
+                  date: { $lte: today }
+                })
               ).length;
               const totalAbsents = (
-                await Attendance.find({ userId: users, status: "absent" })
+                await Attendance.find({
+                  userId: users,
+                  status: "absent",
+                  date: { $lte: today }
+                })
               ).length;
               let percentage = 0;
               if (totalDays !== 0) {
@@ -288,16 +370,28 @@ router.get(
             const grades = await Grade.findOne({ userId: userId });
             if (grades) {
               grades.totalDays = (
-                await Attendance.find({ userId: userId })
+                await Attendance.find({ userId: userId, date: { $lte: today } })
               ).length;
               grades.totalLeaves = (
-                await Attendance.find({ userId: userId, status: "leave" })
+                await Attendance.find({
+                  userId: userId,
+                  status: "leave",
+                  date: { $lte: today }
+                })
               ).length;
               grades.totalPresents = (
-                await Attendance.find({ userId: userId, status: "present" })
+                await Attendance.find({
+                  userId: userId,
+                  status: "present",
+                  date: { $lte: today }
+                })
               ).length;
               grades.totalAbsents = (
-                await Attendance.find({ userId: userId, status: "absent" })
+                await Attendance.find({
+                  userId: userId,
+                  status: "absent",
+                  date: { $lte: today }
+                })
               ).length;
               if (grades.totalDays !== 0) {
                 grades.percentage =
@@ -322,16 +416,29 @@ router.get(
                 grades
               });
             } else {
-              const totalDays = (await Attendance.find({ userId: userId }))
-                .length;
+              const totalDays = (
+                await Attendance.find({ userId: userId, date: { $lte: today } })
+              ).length;
               const totalLeaves = (
-                await Attendance.find({ userId: userId, status: "leave" })
+                await Attendance.find({
+                  userId: userId,
+                  status: "leave",
+                  date: { $lte: today }
+                })
               ).length;
               const totalPresents = (
-                await Attendance.find({ userId: userId, status: "present" })
+                await Attendance.find({
+                  userId: userId,
+                  status: "present",
+                  date: { $lte: today }
+                })
               ).length;
               const totalAbsents = (
-                await Attendance.find({ userId: userId, status: "absent" })
+                await Attendance.find({
+                  userId: userId,
+                  status: "absent",
+                  date: { $lte: today }
+                })
               ).length;
               let percentage = 0;
               if (totalDays !== 0) {
