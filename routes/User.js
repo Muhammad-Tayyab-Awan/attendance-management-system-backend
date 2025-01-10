@@ -405,11 +405,17 @@ router.post(
                 );
                 if (user.role == "admin") {
                   res.cookie("admin-auth-token", authenticationToken, {
-                    httpOnly: true
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === "production",
+                    sameSite: "Strict",
+                    maxAge: 14 * 24 * 60 * 60 * 1000
                   });
                 } else {
                   res.cookie("user-auth-token", authenticationToken, {
-                    httpOnly: true
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === "production",
+                    sameSite: "Strict",
+                    maxAge: 14 * 24 * 60 * 60 * 1000
                   });
                 }
                 res.status(200).json({
@@ -843,7 +849,7 @@ router.delete(
           await Grade.deleteMany({
             userId: { $in: allUsersToBeDeleted.map((user) => user._id) }
           });
-          
+
           await Leave.deleteMany({
             userId: { $in: allUsersToBeDeleted.map((user) => user._id) }
           });
