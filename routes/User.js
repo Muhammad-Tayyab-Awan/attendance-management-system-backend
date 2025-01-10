@@ -268,6 +268,9 @@ router
       }
       await Leave.deleteMany({ userId: userId });
       await Attendance.deleteMany({ userId: userId });
+      const public_id = `${cloudinaryFolder}/${userId.toString()}`;
+      console.log(public_id);
+      await cloudinary.uploader.destroy(public_id);
       const user = await User.findByIdAndDelete(userId);
       res.status(200).json({
         success: true,
