@@ -717,6 +717,22 @@ router.delete(
         if (Object.keys(queries).length === 0) {
           await Leave.deleteMany({ userId: { $ne: req.adminId } });
           await Attendance.deleteMany({ userId: { $ne: req.adminId } });
+          const public_id = `${cloudinaryFolder}`;
+          const exclude = [`${public_id}/${req.adminId.toString()}`];
+          const result = await cloudinary.api.resources({
+            type: "upload",
+            resource_type: "image",
+            prefix: `${public_id}/`
+          });
+          const allImages = result.resources.map(
+            (resource) => resource.public_id
+          );
+          const imagesToDelete = allImages.filter(
+            (id) => !exclude.includes(id)
+          );
+          for (const publicId of imagesToDelete) {
+            await cloudinary.uploader.destroy(publicId);
+          }
           const allUsers = await User.deleteMany({ _id: { $ne: req.adminId } });
           if (allUsers.deletedCount === 0) {
             res.status(404).json({
@@ -767,6 +783,9 @@ router.delete(
               "-__v"
             ]);
             if (userToBeDeleted) {
+              await cloudinary.uploader.destroy(
+                `${cloudinaryFolder}/${userToBeDeleted.id.toString()}`
+              );
               await Leave.deleteMany({
                 userId: userToBeDeleted._id
               });
@@ -800,6 +819,25 @@ router.delete(
             username: { $ne: user.username },
             ...queries
           }).select("_id");
+
+          const public_id = `${cloudinaryFolder}`;
+          const result = await cloudinary.api.resources({
+            type: "upload",
+            resource_type: "image",
+            prefix: `${public_id}/`
+          });
+          const allImages = result.resources.map(
+            (resource) => resource.public_id
+          );
+          const includedImages = allUsersToBeDeleted.map(
+            (user) => `${cloudinaryFolder}/${user.id.toString()}`
+          );
+          const imagesToDelete = allImages.filter((id) =>
+            includedImages.includes(id)
+          );
+          for (const publicId of imagesToDelete) {
+            await cloudinary.uploader.destroy(publicId);
+          }
 
           await Leave.deleteMany({
             userId: { $in: allUsersToBeDeleted.map((user) => user._id) }
