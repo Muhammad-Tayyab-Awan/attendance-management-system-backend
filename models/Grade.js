@@ -5,7 +5,8 @@ const gradeSchema = new Schema(
     userId: {
       type: Schema.Types.ObjectId,
       ref: "user",
-      required: true
+      required: true,
+      unique: true
     },
     totalDays: {
       type: Number,
