@@ -7,6 +7,7 @@ import { query, validationResult } from "express-validator";
 import validateFilterQueries from "../utils/validateFilterQueries.js";
 
 const router = express.Router();
+const startHour = process.env.START_HOUR;
 
 router
   .route("/")
@@ -36,7 +37,7 @@ router
           error: "You are on leave, attendance cannot be marked"
         });
       } else {
-        const todayStartTime = new Date().setHours(7, 0, 0, 0);
+        const todayStartTime = new Date().setHours(startHour, 0, 0, 0);
         const currentTime = Date.now();
         if (currentTime <= todayStartTime) {
           await Attendance.create({
@@ -50,7 +51,7 @@ router
         } else {
           res.status(400).json({
             success: false,
-            error: "Attendance cannot be marked after 7 AM"
+            error: `Attendance cannot be marked after ${startHour} AM`
           });
         }
       }
