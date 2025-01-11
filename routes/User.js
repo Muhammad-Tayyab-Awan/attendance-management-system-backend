@@ -18,7 +18,6 @@ import Attendance from "../models/Attendance.js";
 import Grade from "../models/Grade.js";
 import upload from "../middlewares/multerConfig.js";
 import cloudinary from "../utils/cloudinaryConfig.js";
-import verifyUserLogin from "../middlewares/verifyUserLogin.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const API_URI = process.env.API_URI;
@@ -1081,32 +1080,21 @@ router.get("/logout", verifyLogin, async (req, res) => {
   }
 });
 
-router.get("/verify-user-login", verifyUserLogin, async (req, res) => {
+router.get("/verify-login", verifyLogin, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.userId || req.adminId;
     const user = await User.findById(userId).select("-password");
-    if (user && user.status && user.verified) {
-      res.status(200).json({ success: true, msg: "User is logged in" });
-    } else {
-      res.status(401).json({ success: false, msg: "User is not logged in" });
+    if (!user) {
+      return res.status(400).json({ success: false, error: "Invalid request" });
     }
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: "Error Occurred on Server Side",
-      message: error.message
-    });
-  }
-});
-
-router.get("/verify-admin-login", verifyAdminLogin, async (req, res) => {
-  try {
-    const userId = req.admin;
-    const user = await User.findById(userId).select("-password");
-    if (user && user.status && user.verified) {
-      res.status(200).json({ success: true, msg: "Admin is logged in" });
+    if (user.status && user.verified) {
+      if (user.role === "admin") {
+        res.status(200).json({ success: true, role: "admin" });
+      } else {
+        res.status(200).json({ success: true, role: "user" });
+      }
     } else {
-      res.status(401).json({ success: false, msg: "Admin is not logged in" });
+      res.status(400).json({ success: false, error: "Invalid request" });
     }
   } catch (error) {
     res.status(500).json({
