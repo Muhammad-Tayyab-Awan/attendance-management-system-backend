@@ -758,7 +758,7 @@ router.delete(
             });
           } else {
             res.status(200).json({
-              success: false,
+              success: true,
               msg: `${allUsers.deletedCount} users deleted successfully`
             });
           }
