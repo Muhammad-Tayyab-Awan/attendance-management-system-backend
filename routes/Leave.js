@@ -297,7 +297,7 @@ router.put(
         const leave = await Leave.findById(leaveId);
         if (leave && leave.userId.toString() === userId.toString()) {
           if (leave.status === "rejected") {
-            return res.status(200).json({
+            return res.status(400).json({
               success: false,
               error: "You can't updated rejected leaves"
             });
