@@ -397,7 +397,7 @@ router.get(
               } else {
                 res.status(200).json({
                   success: true,
-                  error: `Leave ${mark} successfully`
+                  msg: `Leave ${mark} successfully`
                 });
               }
             }
