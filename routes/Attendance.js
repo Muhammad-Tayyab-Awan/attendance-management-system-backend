@@ -51,7 +51,7 @@ router
         } else {
           res.status(400).json({
             success: false,
-            error: `Attendance cannot be marked after ${startHour} AM`
+            error: `Attendance cannot be marked after ${startHour} o'clock`
           });
         }
       }
