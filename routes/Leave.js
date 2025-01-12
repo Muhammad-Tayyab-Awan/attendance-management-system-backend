@@ -458,7 +458,13 @@ router.get(
           const leaves = await Leave.find()
             .populate("userId", ["email", "_id"], "user")
             .select("-__v");
-          return res.status(200).json({ success: true, allLeaves: leaves });
+          if (leaves.length > 0) {
+            return res.status(200).json({ success: true, allLeaves: leaves });
+          } else {
+            return res
+              .status(400)
+              .json({ success: false, error: "No leaves found" });
+          }
         } else if (
           validateFilterQueries(queries, [
             "filter",
