@@ -279,10 +279,16 @@ router.get(
         const queries = req.query;
         if (Object.keys(req.query).length === 0) {
           const attendances = await Attendance.find();
-          res.status(200).json({
-            success: true,
-            attendances: attendances
-          });
+          if (attendances.length > 0) {
+            return res.status(200).json({
+              success: true,
+              attendances: attendances
+            });
+          } else {
+            res
+              .status(400)
+              .json({ success: false, error: "No attendance record founds" });
+          }
         } else if (
           validateFilterQueries(queries, [
             "filter",
