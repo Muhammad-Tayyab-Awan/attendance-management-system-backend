@@ -613,7 +613,7 @@ router.get(
               error: "No Users Found"
             });
           } else {
-            res.status(200).json({ success: false, allUsers });
+            res.status(200).json({ success: true, allUsers });
           }
         } else if (
           validateFilterQueries(queries, [
