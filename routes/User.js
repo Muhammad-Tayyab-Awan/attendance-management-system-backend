@@ -351,9 +351,9 @@ router
                     message: err.message
                   });
                 } else {
-                  res.status(200).json({
-                    success: true,
-                    msg: `Dear ${updatedUser.username}! Your account is updated successfully. We have sent an email to ${updatedUser.email}, please visit your mailbox to verify your account`
+                  res.status(400).json({
+                    success: false,
+                    error: `Dear ${updatedUser.username}! Your account is updated successfully. We have sent an email to ${updatedUser.email}, please visit your mailbox to verify your account`
                   });
                 }
               }
