@@ -44,7 +44,7 @@ router
             userId: userId,
             status: "present"
           });
-          res.status({
+          res.status(200).json({
             success: true,
             msg: `Your present is marked successfully`
           });
