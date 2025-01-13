@@ -8,41 +8,40 @@ const absenceCronMin = process.env.ABSENCE_CRON_MIN;
 
 const startAbsenceCronJob = () => {
   try {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date();
+    const todayISO = today.toISOString().split("T")[0];
+
     cron.schedule(
       `${absenceCronMin} ${absenceCronHour} * * *`,
       async () => {
         try {
-          let attendedUsers = await Attendance.find({ date: today }).distinct(
-            "userId"
-          );
-
-          let usersWithLeave = await Leave.find({
-            $or: [{ status: "pending" }, { status: "approved" }],
-            startDate: { $lte: today },
-            endDate: { $gte: today }
-          }).distinct("userId");
-
-          usersWithLeave = usersWithLeave.map((userId) => userId.toString());
-
-          const users = await User.find({ status: true, role: "user" }).select(
-            "_id"
-          );
-
-          attendedUsers = attendedUsers.map((userId) => userId.toString());
-
-          const absentUsers = users
+          const [attendedUsers, usersWithLeave, allUsers] = await Promise.all([
+            Attendance.find({ date: todayISO }),
+            Leave.find({
+              $or: [{ status: "pending" }, { status: "approved" }],
+              startDate: { $lte: todayISO },
+              endDate: { $gte: todayISO }
+            }),
+            User.find({ status: true, role: "user" }).select("-password")
+          ]);
+          const absentUsers = allUsers
             .map((user) => user._id.toString())
-            .filter((userId) => !attendedUsers.includes(userId))
-            .filter((userId) => !usersWithLeave.includes(userId));
-
+            .filter(
+              (userId) =>
+                !attendedUsers
+                  .map((user) => user.userId.toString())
+                  .includes(userId) &&
+                !usersWithLeave
+                  .map((user) => user.userId.toString())
+                  .includes(userId)
+            );
+          const newDate = new Date().toISOString().split("T")[0];
           if (absentUsers.length > 0) {
-            absentUsers.forEach(async (userId) => {
-              await Attendance.create({
-                userId: userId,
-                status: "absent"
-              });
-            });
+            await Promise.all(
+              absentUsers.map((userId) =>
+                Attendance.create({ userId, status: "absent", date: newDate })
+              )
+            );
             console.log({
               success: true,
               msg: `Marked ${absentUsers.length} users as absent`
