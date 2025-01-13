@@ -15,13 +15,8 @@ const startAbsenceCronJob = () => {
       `${absenceCronMin} ${absenceCronHour} * * *`,
       async () => {
         try {
-          const [attendedUsers, usersWithLeave, allUsers] = await Promise.all([
+          const [attendedUsers, allUsers] = await Promise.all([
             Attendance.find({ date: todayISO }),
-            Leave.find({
-              $or: [{ status: "pending" }, { status: "approved" }],
-              startDate: { $lte: todayISO },
-              endDate: { $gte: todayISO }
-            }),
             User.find({ status: true, role: "user" }).select("-password")
           ]);
           const absentUsers = allUsers
@@ -29,9 +24,6 @@ const startAbsenceCronJob = () => {
             .filter(
               (userId) =>
                 !attendedUsers
-                  .map((user) => user.userId.toString())
-                  .includes(userId) &&
-                !usersWithLeave
                   .map((user) => user.userId.toString())
                   .includes(userId)
             );
