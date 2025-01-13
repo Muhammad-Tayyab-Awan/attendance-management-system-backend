@@ -68,13 +68,19 @@ router
                   .json({ success: false, error: "Invalid request" });
               } else {
                 const user = await User.findById(decodedToken.userId);
+                if (!user) {
+                  return res.status(401).json({
+                    success: false,
+                    error: "Invalid request"
+                  });
+                }
                 if (
-                  user &&
                   user.role === "admin" &&
                   user.verified === true &&
                   user.status === true
                 ) {
                   const { password } = req.body;
+                  const passwordCopy = password;
                   const salt = await bcrypt.genSalt(10);
                   const hashedPassword = await bcrypt.hash(password, salt);
                   req.body.password = hashedPassword;
@@ -85,7 +91,14 @@ router
                         { userId: user.id },
                         JWT_SECRET
                       );
-                      const htmlMessage = `<h2>Dear ${user.firstName} ${user.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-email/${verificationToken}">Verify Now</a>`;
+                      const htmlMessage = `
+                      <h2>Dear ${user.firstName} ${user.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-email/${verificationToken}">Verify Now</a>
+                      <div>
+                      <h2>Your Login Credentials</h2>
+                      <p>Email : ${user.email}</p>
+                      <p>Password : ${passwordCopy}</p>
+                      <p>Keep this credentials safe and do not share with anyone</p>
+                      </div>`;
                       mailTransporter.sendMail(
                         {
                           to: user.email,
@@ -130,7 +143,6 @@ router
             });
           } else {
             const { password } = req.body;
-            const passwordCopy = password;
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
             req.body.password = hashedPassword;
@@ -144,12 +156,6 @@ router
                 const htmlMessage = `
                 <div>
                 <h2>Dear ${user.firstName} ${user.lastName}! Please verify your email by visiting the link below</h2><a href="${API_URI}/api/user/verify-email/${verificationToken}">Verify Now</a>
-                </div>
-                <div>
-                <h2>Your Login Credentials</h2>
-                <p>Email : ${user.email}</p>
-                <p>Password : ${passwordCopy}</p>
-                <p>Keep this credentials safe and do not share with anyone</p>
                 </div>
                 `;
 
