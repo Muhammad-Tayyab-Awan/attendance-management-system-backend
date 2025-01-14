@@ -22,6 +22,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(favicon(path.join(__dirname, "favicon.ico")));
 
+app.get("/favicon.ico", (req, res) => {
+  res.sendFile(path.join(__dirname, "favicon.ico"));
+});
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
