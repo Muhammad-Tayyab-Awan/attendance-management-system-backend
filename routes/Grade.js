@@ -22,21 +22,21 @@ router.get("/", verifyUserLogin, async (req, res) => {
         await Attendance.find({
           userId,
           status: "leave",
-          date: { $lte: today },
+          date: { $lte: today }
         })
       ).length;
       grades.totalPresents = (
         await Attendance.find({
           userId,
           status: "present",
-          date: { $lte: today },
+          date: { $lte: today }
         })
       ).length;
       grades.totalAbsents = (
         await Attendance.find({
           userId,
           status: "absent",
-          date: { $lte: today },
+          date: { $lte: today }
         })
       ).length;
       if (grades.totalDays !== 0) {
@@ -58,7 +58,7 @@ router.get("/", verifyUserLogin, async (req, res) => {
       await grades.save();
       res.status(200).json({
         success: true,
-        grades,
+        grades
       });
     } else {
       const totalDays = (
@@ -68,21 +68,21 @@ router.get("/", verifyUserLogin, async (req, res) => {
         await Attendance.find({
           userId,
           status: "leave",
-          date: { $lte: today },
+          date: { $lte: today }
         })
       ).length;
       const totalPresents = (
         await Attendance.find({
           userId,
           status: "present",
-          date: { $lte: today },
+          date: { $lte: today }
         })
       ).length;
       const totalAbsents = (
         await Attendance.find({
           userId,
           status: "absent",
-          date: { $lte: today },
+          date: { $lte: today }
         })
       ).length;
       let percentage = 0;
@@ -110,18 +110,18 @@ router.get("/", verifyUserLogin, async (req, res) => {
         totalPresents,
         totalAbsents,
         percentage,
-        grade,
+        grade
       });
       res.status(200).json({
         success: true,
-        grades: newGrades,
+        grades: newGrades
       });
     }
   } catch (error) {
     res.status(500).json({
       success: false,
       error: "Error Occurred on Server Side",
-      message: error.message,
+      message: error.message
     });
   }
 });
@@ -140,7 +140,7 @@ router.get(
           let users = await User.find({
             role: "user",
             status: true,
-            verified: true,
+            verified: true
           }).select("_id");
           if (users.length > 1) {
             const userGrades = [];
@@ -155,21 +155,21 @@ router.get(
                   await Attendance.find({
                     userId: user,
                     status: "leave",
-                    date: { $lte: today },
+                    date: { $lte: today }
                   })
                 ).length;
                 grades.totalPresents = (
                   await Attendance.find({
                     userId: user,
                     status: "present",
-                    date: { $lte: today },
+                    date: { $lte: today }
                   })
                 ).length;
                 grades.totalAbsents = (
                   await Attendance.find({
                     userId: user,
                     status: "absent",
-                    date: { $lte: today },
+                    date: { $lte: today }
                   })
                 ).length;
                 if (grades.totalDays !== 0) {
@@ -199,21 +199,21 @@ router.get(
                   await Attendance.find({
                     userId: user,
                     status: "leave",
-                    date: { $lte: today },
+                    date: { $lte: today }
                   })
                 ).length;
                 const totalPresents = (
                   await Attendance.find({
                     userId: user,
                     status: "present",
-                    date: { $lte: today },
+                    date: { $lte: today }
                   })
                 ).length;
                 const totalAbsents = (
                   await Attendance.find({
                     userId: user,
                     status: "absent",
-                    date: { $lte: today },
+                    date: { $lte: today }
                   })
                 ).length;
                 let percentage = 0;
@@ -241,12 +241,12 @@ router.get(
                   totalPresents,
                   totalAbsents,
                   percentage,
-                  grade,
+                  grade
                 });
                 userGrades.push(newGrades);
               }
             }
-            res.status(200).json({ success: true, userGrades });
+            res.status(200).json({ success: true, grades: userGrades });
           } else if (users.length === 1) {
             users = users.map((user) => user._id);
             users = users[0];
@@ -259,21 +259,21 @@ router.get(
                 await Attendance.find({
                   userId: users,
                   status: "leave",
-                  date: { $lte: today },
+                  date: { $lte: today }
                 })
               ).length;
               grades.totalPresents = (
                 await Attendance.find({
                   userId: users,
                   status: "present",
-                  date: { $lte: today },
+                  date: { $lte: today }
                 })
               ).length;
               grades.totalAbsents = (
                 await Attendance.find({
                   userId: users,
                   status: "absent",
-                  date: { $lte: today },
+                  date: { $lte: today }
                 })
               ).length;
               if (grades.totalDays !== 0) {
@@ -296,7 +296,7 @@ router.get(
               await grades.save();
               res.status(200).json({
                 success: true,
-                grades: [grades],
+                grades: [grades]
               });
             } else {
               const totalDays = (
@@ -306,21 +306,21 @@ router.get(
                 await Attendance.find({
                   userId: users,
                   status: "leave",
-                  date: { $lte: today },
+                  date: { $lte: today }
                 })
               ).length;
               const totalPresents = (
                 await Attendance.find({
                   userId: users,
                   status: "present",
-                  date: { $lte: today },
+                  date: { $lte: today }
                 })
               ).length;
               const totalAbsents = (
                 await Attendance.find({
                   userId: users,
                   status: "absent",
-                  date: { $lte: today },
+                  date: { $lte: today }
                 })
               ).length;
               let percentage = 0;
@@ -348,11 +348,11 @@ router.get(
                 totalPresents,
                 totalAbsents,
                 percentage,
-                grade,
+                grade
               });
               res.status(200).json({
                 success: true,
-                grades: [newGrades],
+                grades: [newGrades]
               });
             }
           } else {
@@ -376,21 +376,21 @@ router.get(
                 await Attendance.find({
                   userId: userId,
                   status: "leave",
-                  date: { $lte: today },
+                  date: { $lte: today }
                 })
               ).length;
               grades.totalPresents = (
                 await Attendance.find({
                   userId: userId,
                   status: "present",
-                  date: { $lte: today },
+                  date: { $lte: today }
                 })
               ).length;
               grades.totalAbsents = (
                 await Attendance.find({
                   userId: userId,
                   status: "absent",
-                  date: { $lte: today },
+                  date: { $lte: today }
                 })
               ).length;
               if (grades.totalDays !== 0) {
@@ -413,7 +413,7 @@ router.get(
               await grades.save();
               res.status(200).json({
                 success: true,
-                grades,
+                grades
               });
             } else {
               const totalDays = (
@@ -423,21 +423,21 @@ router.get(
                 await Attendance.find({
                   userId: userId,
                   status: "leave",
-                  date: { $lte: today },
+                  date: { $lte: today }
                 })
               ).length;
               const totalPresents = (
                 await Attendance.find({
                   userId: userId,
                   status: "present",
-                  date: { $lte: today },
+                  date: { $lte: today }
                 })
               ).length;
               const totalAbsents = (
                 await Attendance.find({
                   userId: userId,
                   status: "absent",
-                  date: { $lte: today },
+                  date: { $lte: today }
                 })
               ).length;
               let percentage = 0;
@@ -465,17 +465,17 @@ router.get(
                 totalPresents,
                 totalAbsents,
                 percentage,
-                grade,
+                grade
               });
               res.status(200).json({
                 success: true,
-                grades: newGrades,
+                grades: newGrades
               });
             }
           } else {
             res.status(400).json({
               success: false,
-              error: "User not found",
+              error: "User not found"
             });
           }
         } else {
@@ -486,14 +486,14 @@ router.get(
       } else {
         res.status(400).json({
           success: false,
-          error: result.errors,
+          error: result.errors
         });
       }
     } catch (error) {
       res.status(500).json({
         success: false,
         error: "Error Occurred on Server Side",
-        message: error.message,
+        message: error.message
       });
     }
   }
