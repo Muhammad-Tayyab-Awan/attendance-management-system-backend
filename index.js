@@ -3,6 +3,9 @@ import "dotenv/config";
 import express from "express";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
+import favicon from "serve-favicon";
+import path from "path";
+import { fileURLToPath } from "url";
 import connectToDatabase from "./utils/dbConnection.js";
 import startAbsenceCronJob from "./utils/absenceCron.js";
 import startLeavesApprovalNotificationCronJob from "./utils/leavesApprovalNotificationCron.js";
@@ -14,6 +17,10 @@ import gradeRoute from "./routes/Grade.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(favicon(path.join(__dirname, "favicon.ico")));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
