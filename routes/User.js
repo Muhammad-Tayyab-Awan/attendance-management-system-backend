@@ -19,6 +19,7 @@ import Grade from "../models/Grade.js";
 import upload from "../middlewares/multerConfig.js";
 import cloudinary from "../utils/cloudinaryConfig.js";
 
+const api_url = process.env.FRONTEND_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 const API_URI = process.env.API_URI;
 const cloudinaryFolder = process.env.CLOUDINARY_FOLDER;
@@ -479,28 +480,28 @@ router.get(
         const verificationToken = req.params.verificationToken;
         jwt.verify(verificationToken, JWT_SECRET, async (err, decodedToken) => {
           if (err) {
-            res.status(400).json({
-              success: false,
-              error: "Invalid request"
+            res.status(400).render("verifyUserEmail", {
+              status: "invalid",
+              api_url: `${api_url}`
             });
           } else {
             const user = await User.findById(decodedToken.userId);
             if (user && !user.status) {
               user.status = true;
               await user.save();
-              res.status(200).json({
-                success: true,
-                msg: "User Email Verified Successfully"
+              res.status(200).render("verifyUserEmail", {
+                status: true,
+                api_url: `${api_url}`
               });
             } else if (user && user.status) {
-              res.status(400).json({
-                success: false,
-                msg: "User Email Already Verified"
+              res.status(400).render("verifyUserEmail", {
+                status: false,
+                api_url: `${api_url}`
               });
             } else {
-              res.status(400).json({
-                success: false,
-                error: "Invalid request"
+              res.status(400).render("verifyUserEmail", {
+                status: "invalid",
+                api_url: `${api_url}`
               });
             }
           }

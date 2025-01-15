@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Verification</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        div {
+            width: 75%;
+            color: white;
+            text-align: center;
+            font-size: x-large;
+            border-radius: .5rem;
+            padding: 10px 0;
+            margin: 10px auto;
+        }
+
+        .success {
+            background: green;
+        }
+
+        .present {
+            background: yellowgreen;
+        }
+
+        .failure {
+            background: red;
+        }
+    </style>
+</head>
+
+<body>
+    <% if(status===true) {%>
+        <div class="success">Your email verified successfully</div>
+        <% } else if(status===false){%>
+            <div class="present">Your email already verified</div>
+            <% } else{%>
+                <div class="failure">Invalid request</div>
+                <% } %>
+</body>
+<script>
+    setTimeout(() => {
+        window.location.href = <%- JSON.stringify(api_url) %>;
+    }, 3000);
+</script>
+
+</html>
