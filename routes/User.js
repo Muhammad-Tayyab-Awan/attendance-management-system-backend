@@ -283,12 +283,12 @@ router
       res.clearCookie("admin-auth-token", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "None"
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Strict"
       });
       res.clearCookie("user-auth-token", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "None"
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Strict"
       });
       res.status(200).json({
         success: true,
@@ -423,14 +423,16 @@ router.post(
                   res.cookie("admin-auth-token", authenticationToken, {
                     httpOnly: true,
                     secure: process.env.NODE_ENV === "production",
-                    sameSite: "None",
+                    sameSite:
+                      process.env.NODE_ENV === "production" ? "None" : "Strict",
                     maxAge: 14 * 24 * 60 * 60 * 1000
                   });
                 } else {
                   res.cookie("user-auth-token", authenticationToken, {
                     httpOnly: true,
                     secure: process.env.NODE_ENV === "production",
-                    sameSite: "None",
+                    sameSite:
+                      process.env.NODE_ENV === "production" ? "None" : "Strict",
                     maxAge: 14 * 24 * 60 * 60 * 1000
                   });
                 }
@@ -1063,12 +1065,12 @@ router.get("/logout", verifyLogin, async (req, res) => {
     res.clearCookie("admin-auth-token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "None"
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Strict"
     });
     res.clearCookie("user-auth-token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "None"
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Strict"
     });
     res.status(200).json({ success: true, msg: "Logout successfully!" });
   } catch (error) {
