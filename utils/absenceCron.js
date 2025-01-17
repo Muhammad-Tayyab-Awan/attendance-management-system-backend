@@ -20,14 +20,10 @@ const startAbsenceCronJob = () => {
             verified: true
           });
           attendedUsers = attendedUsers.map((user) => user.userId.toString());
-          console.log(attendedUsers);
-          console.log(allUsers);
           allUsers = allUsers.map((user) => user._id.toString());
           const absentUsers = allUsers.filter(
             (user) => !attendedUsers.includes(user)
           );
-          console.log(absentUsers);
-          console.log(todayISO);
           if (absentUsers.length > 0) {
             for (let absentUser of absentUsers) {
               await Attendance.create({
